@@ -1,6 +1,0 @@
-use_frameworks!
-target 'ForceDirectedScene_Tests' do
-  pod 'ForceDirectedScene', :path => '../'
-  
-  
-end

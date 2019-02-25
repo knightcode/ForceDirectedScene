@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   s.name             = 'ForceDirectedScene'
   s.version          = '0.1.0'
-  s.summary          = 'A short description of ForceDirectedScene.'
+  s.summary          = 'A SceneKit compatible Force Directed Graph Implementation'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -28,15 +28,14 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/knightcode/ForceDirectedScene.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '10.0'
 
-  s.source_files = 'ForceDirectedScene/Classes/**/*'
+  s.source_files = 'Sources/**/*'
   
   # s.resource_bundles = {
-  #   'ForceDirectedScene' => ['ForceDirectedScene/Assets/*.png']
+  #   'ForceDirectedScene' => ['Assets/*.png']
   # }
 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  # s.public_header_files = 'Pod/Sources/**/*.h'
+  s.frameworks = 'SpriteKit'
 end
