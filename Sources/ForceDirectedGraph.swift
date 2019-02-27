@@ -7,8 +7,6 @@
 //
 
 import Foundation
-import SpriteKit
-
 
 public protocol ForceBody: QuadTreeElement {
     var position: CGPoint { get }
