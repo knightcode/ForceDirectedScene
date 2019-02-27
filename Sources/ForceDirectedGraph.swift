@@ -55,7 +55,6 @@ public class ForceDirectedGraph {
     public var maxDistance: CGFloat
     public var minDistance: CGFloat
     public var center: CGPoint?
-    public var velocityDamping: CGFloat = 0.9
     
     private var nodes: Array<ForceBodyNode>
     private var quadTree: QuadTree<ForceBodyNode>
@@ -67,7 +66,7 @@ public class ForceDirectedGraph {
         }
     }
 
-    public init(bounds: CGRect, nodes: Array<ForceBody>, theta: CGFloat = 0.8, min: CGFloat = 0.0, max: CGFloat = CGFloat.infinity,
+    public init(bounds: CGRect, nodes: Array<ForceBody>, theta: CGFloat = 0.5, min: CGFloat = 0.0, max: CGFloat = CGFloat.infinity,
                 center: CGPoint? = nil, centeringStrength: CGFloat = 0.0002) {
         self.centeringStrength = centeringStrength
         self.theta = theta
@@ -84,7 +83,7 @@ public class ForceDirectedGraph {
         quadTree = QuadTree(bounds: bounds, bodies: self.nodes)
     }
     
-    public func update (timediff: TimeInterval) {
+    public func update () {
 
         quadTree.computeCenters()
         runBarnesHut()
