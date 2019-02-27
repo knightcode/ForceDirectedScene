@@ -16,12 +16,12 @@ public class Quad<T: QuadTreeElement> {
     public let bounds: CGRect
     public var center: CGPoint
     public var charge: CGFloat
-    
+
     private(set) public var count: Int
-    
+
     var element: T?
     var children: Array<Quad>?
-    
+
     public init (bounds: CGRect) {
         self.bounds = bounds
         self.center = bounds.midpoint
@@ -36,10 +36,10 @@ public class Quad<T: QuadTreeElement> {
         self.count = 1
         self.charge = 0
     }
-    
+
     public func add (element: T) {
         guard bounds.contains(element.position) else {
-            print("element outside of my bounds: \(bounds), position: \(element.position)")
+            print("trying add: element outside of my bounds: \(bounds), position: \(element.position)")
             return
         }
         if self.element == nil && self.children == nil {
@@ -65,12 +65,8 @@ public class Quad<T: QuadTreeElement> {
         }
         count += 1
     }
-    
+
     public func remove (element: T) -> Bool {
-        guard bounds.contains(element.position) else {
-            print("element outside of my bounds: \(bounds), position: \(element.position)")
-            return false
-        }
         if let elem = self.element, elem == element {
             self.element = nil
             count = 0
@@ -79,16 +75,16 @@ public class Quad<T: QuadTreeElement> {
         guard let children = self.children else { return false }
         var found = false
         for child in children {
-            if child.bounds.contains(element.position) {
-                if child.remove(element: element) {
-                    count -= 1
-                    found = true
-                }
+            if child.remove(element: element) {
+                count -= 1
+                found = true
             }
+        
         }
         if count == 1 {
+            // consolidate
             for child in children {
-                if child.count == 1 && child.element != nil {
+                if child.element != nil {
                     self.element = child.element
                 }
             }
@@ -96,7 +92,7 @@ public class Quad<T: QuadTreeElement> {
         }
         return found
     }
-    
+
     public func computeCenter () -> CGPoint {
         if let elem = self.element {
             center = elem.position // position may have changed from acting forces
@@ -114,28 +110,30 @@ public class Quad<T: QuadTreeElement> {
         center /= CGFloat(count)
         return center
     }
-    
+
     private func subdivide () {
+        let midX = bounds.size.width / 2
+        let midY = bounds.size.height / 2
         let nw = CGRect(
             x: bounds.origin.x,
-            y: bounds.origin.y + bounds.size.height/2,
-            width: bounds.size.width/2,
-            height: bounds.size.height/2)
+            y: bounds.origin.y + midY,
+            width: midX,
+            height: midY)
         let ne = CGRect(
-            x: bounds.origin.x + bounds.size.width/2,
-            y: bounds.origin.y + bounds.size.height/2,
-            width: bounds.size.width/2,
-            height: bounds.size.height/2)
+            x: bounds.origin.x + midX,
+            y: bounds.origin.y + midY,
+            width: midX,
+            height: midY)
         let sw = CGRect(
             x: bounds.origin.x,
             y: bounds.origin.y,
-            width: bounds.size.width/2,
-            height: bounds.size.height/2)
+            width: midX,
+            height: midY)
         let se = CGRect(
-            x: bounds.origin.x + bounds.size.width/2,
+            x: bounds.origin.x + midX,
             y: bounds.origin.y,
-            width: bounds.size.width/2,
-            height: bounds.size.height/2)
+            width:midX,
+            height: midY)
         self.children = [
             Quad(bounds: nw),
             Quad(bounds: ne),
@@ -156,7 +154,7 @@ public class QuadTree<T: QuadTreeElement>: Sequence {
             }
         }
     }
-    
+
     public func add (element: T) {
         root.add(element: element)
     }
@@ -166,15 +164,15 @@ public class QuadTree<T: QuadTreeElement>: Sequence {
     public func computeCenters () {
         let _ = root.computeCenter()
     }
-    
+
     public func makeIterator() -> QuadTreeIterator<T> {
         return QuadTreeIterator(quad: root)
     }
-    
+
     public func forEach(iter: (T, Quad<T>) -> Void) {
         recursiveforEach(node: root, iter: iter)
     }
-    
+
     private func recursiveforEach(node: Quad<T>, iter: (T, Quad<T>) -> Void) {
         if node.element == nil && node.children == nil {
             return

@@ -13,7 +13,7 @@ import SpriteKit
 public protocol ForceBody: QuadTreeElement {
     var position: CGPoint { get }
     var charge: CGFloat { get }
-    
+
     func applyForce(force: CGVector)
 }
 
@@ -26,7 +26,6 @@ public func == (lhs: QuadTreeElement, rhs: QuadTreeElement) -> Bool {
 }
 
 class ForceBodyNode: QuadTreeElement, Equatable {
-    
     var force: CGVector
     var data: ForceBody
     
@@ -49,6 +48,8 @@ class ForceBodyNode: QuadTreeElement, Equatable {
 
 public class ForceDirectedGraph {
     
+    private static let JIGGLE_THRESHOLD: CGFloat = 0.1
+
     public var centeringStrength: CGFloat
     public var theta: CGFloat
     public var maxDistance: CGFloat
@@ -84,15 +85,14 @@ public class ForceDirectedGraph {
     }
     
     public func update (timediff: TimeInterval) {
-        //let d = CGFloat(timediff)
+
         quadTree.computeCenters()
         runBarnesHut()
         
         toRestructure.removeAll(keepingCapacity: true)
         quadTree.forEach { (node: ForceBodyNode, quad: Quad<ForceBodyNode>) in
-            //let old = node.position
             node.data.applyForce(force: node.force)
-            if quad.bounds.contains(node.position) {
+            if !quad.bounds.contains(node.position) {
                 toRestructure.append(node)
             }
         }
@@ -105,20 +105,31 @@ public class ForceDirectedGraph {
         }
     }
 
-    public func printNodes (iterator: (ForceBody) -> Void) {
+    public func forEach (iterator: (ForceBody) -> Void) {
         for node in quadTree {
             let _ = iterator(node.data)
-            //print("  force: \(node.force)")
-            //print("  velocity: \(node.velocity)")
         }
     }
 
     private func runBarnesHut () {
+        var db: CGVector
+        var strength: CGFloat
+
         for node in nodes {
             node.force.dx = 0.0
             node.force.dy = 0.0
             runBarnesHut(node: node, quad: quadTree.root)
-            //print("new force: \(node.force)")
+
+            if let center = self.center {
+                db = center - node.position
+                strength = self.centeringStrength
+                if db.dx.isFinite {
+                    node.force.dx +=  (0.5 * strength * (db.dx < 0.0 ? -1.0 : 1.0))
+                }
+                if db.dy.isFinite {
+                    node.force.dy += (0.5 * strength * (db.dy < 0.0 ? -1.0 : 1.0))
+                }
+            }
         }
     }
     
@@ -140,8 +151,9 @@ public class ForceDirectedGraph {
                     // same node
                     return
                 }
-                db = elem.position - node.position
-                if db.dx == 0.0 || db.dy == 0.0 {
+                db = node.position - elem.position // direction matters
+                while db.dx <= ForceDirectedGraph.JIGGLE_THRESHOLD && db.dx >= -ForceDirectedGraph.JIGGLE_THRESHOLD ||
+                        db.dy <= ForceDirectedGraph.JIGGLE_THRESHOLD && db.dy >= -ForceDirectedGraph.JIGGLE_THRESHOLD {
                     jiggle(vector: &db)
                 }
                 distance = db.magnitude
@@ -150,13 +162,13 @@ public class ForceDirectedGraph {
                 if distance >= minDistance && distance <= maxDistance {
                     strength = (elem.charge * node.charge) / (distance * distance) // * 9e9
                     direction *= strength
-                    node.force = node.force + direction
+                    node.force += direction
                 }
-                
             }
         } else {
-            db = quad.center - node.position
-            if db.dx == 0.0 || db.dy == 0.0 {
+            db = node.position - quad.center // direction matters
+            while db.dx <= ForceDirectedGraph.JIGGLE_THRESHOLD && db.dx >= -ForceDirectedGraph.JIGGLE_THRESHOLD ||
+                db.dy <= ForceDirectedGraph.JIGGLE_THRESHOLD && db.dy >= -ForceDirectedGraph.JIGGLE_THRESHOLD {
                 jiggle(vector: &db)
             }
             distance = db.magnitude
@@ -164,24 +176,23 @@ public class ForceDirectedGraph {
             if distance >= minDistance && distance <= maxDistance {
                 strength = (quad.charge * node.charge) / (distance * distance) // * 9e9
                 direction *= strength
-                node.force = node.force + direction
+                node.force += direction
             }
         }
-        
-        /*if let center = self.center {
-            db = center - node.position
-            strength = self.centeringStrength
-            if db.dx.isFinite {
-                node.force.dx +=  0.5 * strength * db.dx
-            }
-            if db.dy.isFinite {
-                node.force.dy += 0.5 * strength * db.dy
-            }
-        }*/
     }
     
     private func jiggle (vector: inout CGVector) {
-        vector += CGVector(dx: CGFloat(Float.random(in: -0.5..<0.5)), dy: CGFloat(Float.random(in: -0.5..<0.5)))
+        // exaggerate small differences
+        if vector.dx < 0.0 {
+            vector.dx += CGFloat.random(in: -1.0..<0.0)
+        } else {
+            vector.dx += CGFloat.random(in: 0.0..<1.0)
+        }
+        if vector.dy < 0.0 {
+            vector.dy += CGFloat.random(in: -1.0..<0.0)
+        } else {
+            vector.dy += CGFloat.random(in: 0.0..<1.0)
+        }
     }
 }
 
@@ -190,7 +201,7 @@ public extension CGVector {
         return sqrt(dx*dx + dy*dy)
     }
     internal var normalized: CGVector {
-        return CGVector(dx: dx, dy: dy) / magnitude
+        return CGVector(dx: dx, dy: dy) / sqrt(dx*dx + dy*dy)
     }
 }
 
