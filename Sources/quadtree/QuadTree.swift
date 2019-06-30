@@ -211,7 +211,7 @@ public class QuadTreeIterator<T: QuadTreeElement>: IteratorProtocol {
 }
 
 public extension CGRect {
-    public var midpoint: CGPoint{
+    var midpoint: CGPoint{
         return CGPoint(x: midX, y: midY)
     }
 }

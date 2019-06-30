@@ -194,10 +194,10 @@ public class ForceDirectedGraph {
 }
 
 public extension CGVector {
-    internal var magnitude: CGFloat {
+    var magnitude: CGFloat {
         return sqrt(dx*dx + dy*dy)
     }
-    internal var normalized: CGVector {
+    var normalized: CGVector {
         return CGVector(dx: dx, dy: dy) / sqrt(dx*dx + dy*dy)
     }
 }
@@ -207,7 +207,7 @@ func - (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
     return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
 }
 @inline(__always)
-func - (lhs: CGPoint, rhs: CGPoint) -> CGVector {
+public func - (lhs: CGPoint, rhs: CGPoint) -> CGVector {
     return CGVector(dx: lhs.x - rhs.x, dy: lhs.y - rhs.y)
 }
 @inline(__always)
