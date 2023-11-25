@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol QuadTreeElement: class {
+public protocol QuadTreeElement: AnyObject {
     var position: CGPoint { get }
     var charge: CGFloat { get }
 }
